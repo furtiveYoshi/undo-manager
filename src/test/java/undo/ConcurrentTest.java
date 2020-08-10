@@ -21,15 +21,15 @@ import java.util.concurrent.*;
 
 @RunWith(JUnit4.class)
 public class ConcurrentTest {
-    UndoManagerFactory managerFactory = new UndoManagerFactoryImpl();
-    ChangeFactory changeFactory = new ChangeFactoryImpl();
+    private UndoManagerFactory managerFactory = new UndoManagerFactoryImpl();
+    private ChangeFactory changeFactory = new ChangeFactoryImpl();
 
     private class ChangeMakerTask implements Callable<String> {
-        Document document;
-        UndoManager undoManager;
-        List<Change> changes;
+        final Document document;
+        final UndoManager undoManager;
+        final List<Change> changes;
 
-        public ChangeMakerTask(Document document, UndoManager undoManager, List<Change> changes) {
+        ChangeMakerTask(Document document, UndoManager undoManager, List<Change> changes) {
             this.document = document;
             this.undoManager = undoManager;
             this.changes = new ArrayList<>(changes);
@@ -50,10 +50,10 @@ public class ConcurrentTest {
     }
 
     private class UndoChangeTask implements Callable<String> {
-        UndoManager undoManager;
-        int countOfUndo;
+        final UndoManager undoManager;
+        final int countOfUndo;
 
-        public UndoChangeTask(UndoManager undoManager, int countOfUndo) {
+        UndoChangeTask(UndoManager undoManager, int countOfUndo) {
             this.undoManager = undoManager;
             this.countOfUndo = countOfUndo;
         }
@@ -70,10 +70,10 @@ public class ConcurrentTest {
     }
 
     private class RedoChangeTask implements Callable<String> {
-        UndoManager undoManager;
-        int countOfRedo;
+        final UndoManager undoManager;
+        final int countOfRedo;
 
-        public RedoChangeTask(UndoManager undoManager, int countOfRedo) {
+        RedoChangeTask(UndoManager undoManager, int countOfRedo) {
             this.undoManager = undoManager;
             this.countOfRedo = countOfRedo;
         }

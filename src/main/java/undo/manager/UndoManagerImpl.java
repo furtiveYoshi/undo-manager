@@ -3,8 +3,6 @@ package undo.manager;
 import undo.change.Change;
 import undo.document.Document;
 
-import java.util.ArrayList;
-
 public class UndoManagerImpl implements UndoManager {
     private final Change[] changeList;
     private final Document doc;

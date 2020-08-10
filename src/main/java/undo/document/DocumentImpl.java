@@ -1,7 +1,7 @@
 package undo.document;
 
 public class DocumentImpl implements Document {
-    private StringBuffer document = new StringBuffer();
+    private final StringBuffer document = new StringBuffer();
     private int currentPosition = 0;
 
     @Override
