@@ -6,52 +6,48 @@ import undo.document.Document;
 import java.util.ArrayList;
 
 public class UndoManagerImpl implements UndoManager {
-    private final ArrayList<Change> changeList;
+    private final Change[] changeList;
     private final Document doc;
-    private int currentChangeIndex = -1;
-    private int lastChangeIndex = -1;
-    private int oldestChangeIndex = 0;
+    private volatile int currentChangeIndex = -1;
+    private volatile int lastChangeIndex = -1;
+    private volatile int oldestChangeIndex = 0;
     private final int bufferSize;
-    private boolean isOverridden = false;
+    private volatile boolean isOverridden = false;
 
     public UndoManagerImpl(Document doc, int bufferSize) {
+        this.changeList = new Change[bufferSize];
         this.doc = doc;
         this.bufferSize = bufferSize;
-        this.changeList = new ArrayList<>(bufferSize);
-        for (int i = 0; i < bufferSize; i++) {
-            changeList.add(null);
-        }
     }
 
     @Override
-    public void registerChange(Change change) {
+    public synchronized void registerChange(Change change) {
         if (currentChangeIndex + 1 < bufferSize) {
-            changeList.set(currentChangeIndex + 1, change);
+            changeList[currentChangeIndex + 1] = change;
             lastChangeIndex = ++currentChangeIndex;
         } else {
-            changeList.set(0, change);
+            changeList[0] = change;
             lastChangeIndex = currentChangeIndex = 0;
             isOverridden = true;
         }
         if (isOverridden && lastChangeIndex == oldestChangeIndex) {
             oldestChangeIndex = lastChangeIndex + 1 < bufferSize ? lastChangeIndex + 1 : 0;
-
         }
     }
 
     @Override
-    public boolean canUndo() {
+    public synchronized boolean canUndo() {
         return isOverridden || currentChangeIndex >= oldestChangeIndex;
     }
 
     @Override
-    public void undo() {
+    public synchronized void undo() {
         if (!canUndo()) {
             throw new IllegalStateException("Can not perform undo operation for document");
         }
 
         try {
-            changeList.get(currentChangeIndex).revert(doc);
+            changeList[currentChangeIndex].revert(doc);
         } catch (Exception ex) {
             throw new IllegalStateException("Can not perform undo operation for document", ex);
         }
@@ -65,12 +61,12 @@ public class UndoManagerImpl implements UndoManager {
     }
 
     @Override
-    public boolean canRedo() {
+    public synchronized boolean canRedo() {
         return currentChangeIndex != lastChangeIndex;
     }
 
     @Override
-    public void redo() {
+    public synchronized void redo() {
         if (!canRedo()) {
             throw new IllegalStateException("Can not perform redo operation for document");
         }
@@ -78,10 +74,10 @@ public class UndoManagerImpl implements UndoManager {
             currentChangeIndex = oldestChangeIndex - 1;
         }
         if (currentChangeIndex + 1 < bufferSize) {
-            changeList.get(currentChangeIndex + 1).apply(doc);
+            changeList[currentChangeIndex + 1].apply(doc);
             ++currentChangeIndex;
         } else if (lastChangeIndex < currentChangeIndex) {
-            changeList.get(0).apply(doc);
+            changeList[0].apply(doc);
             currentChangeIndex = 0;
             isOverridden = true;
         } else {
